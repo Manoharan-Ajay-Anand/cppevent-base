@@ -1,5 +1,5 @@
-#ifndef CPPEVENT_BASE_TASK_H
-#define CPPEVENT_BASE_TASK_H
+#ifndef CPPEVENT_BASE_TASK_HPP
+#define CPPEVENT_BASE_TASK_HPP
 
 #include <coroutine>
 #include <optional>
