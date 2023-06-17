@@ -19,28 +19,32 @@ cppevent::event_listener::~event_listener() {
     throw_if_error(status, "Failed to delete fd to epoll: ");
 }
 
-void cppevent::event_listener::set_epoll(bool read, bool write) {
+void cppevent::event_listener::mod_epoll() {
     epoll_event e_event;
     e_event.data.fd = m_fd;
     e_event.events = EPOLLONESHOT;
-    if (read) {
+    if (m_read_handle_opt) {
         e_event.events |= EPOLLIN;
     }
-    if (write) {
+    if (m_write_handle_opt) {
         e_event.events |= EPOLLOUT;
     }
     int status = epoll_ctl(m_epoll_fd, EPOLL_CTL_MOD, m_fd, &e_event);
     throw_if_error(status, "Failed to mod fd to epoll: ");
 }
 
+
+void cppevent::event_awaiter::await_suspend(std::coroutine_handle<> handle) {
+    m_handle_opt = handle;
+    m_listener.mod_epoll();
+}
+
 cppevent::event_awaiter cppevent::event_listener::await_read() {
-    set_epoll(true, m_write_handle_opt.has_value());
-    return { m_read_handle_opt };
+    return { *this, m_read_handle_opt };
 }
 
 cppevent::event_awaiter cppevent::event_listener::await_write() {
-    set_epoll(m_read_handle_opt.has_value(), true);
-    return { m_write_handle_opt };
+    return { *this, m_write_handle_opt };
 }
 
 void cppevent::event_listener::resume_handle(std::optional<std::coroutine_handle<>>& handle_opt) {
@@ -59,5 +63,5 @@ void cppevent::event_listener::on_event(bool can_read, bool can_write) {
     if (can_write) {
         resume_handle(m_write_handle_opt);
     }
-    set_epoll(m_read_handle_opt.has_value(), m_write_handle_opt.has_value());
+    mod_epoll();
 }

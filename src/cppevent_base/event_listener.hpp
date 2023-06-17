@@ -6,11 +6,14 @@
 
 namespace cppevent {
 
+class event_listener;
+
 struct event_awaiter {
+    event_listener& m_listener;
     std::optional<std::coroutine_handle<>>& m_handle_opt;
 
     bool await_ready() { return false; }
-    void await_suspend(std::coroutine_handle<> handle) { m_handle_opt = handle; }
+    void await_suspend(std::coroutine_handle<> handle);
     void await_resume() {}
 };
 
@@ -21,7 +24,7 @@ private:
     std::optional<std::coroutine_handle<>> m_read_handle_opt;
     std::optional<std::coroutine_handle<>> m_write_handle_opt;
 
-    void set_epoll(bool read, bool write);
+    void mod_epoll();
 
     void resume_handle(std::optional<std::coroutine_handle<>>& handle_opt);
  
@@ -35,6 +38,8 @@ public:
     event_awaiter await_write();
 
     void on_event(bool can_read, bool can_write);
+
+    friend class event_awaiter;
 };
 
 }
