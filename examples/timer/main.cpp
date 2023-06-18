@@ -9,20 +9,26 @@
 #include <sys/timerfd.h>
 #include <unistd.h>
 
-cppevent::task timed_coroutine(cppevent::event_loop& e_loop) {
+int create_timer_fd(time_t seconds) {
     int t_fd = timerfd_create(CLOCK_REALTIME, TFD_NONBLOCK);
-    auto& listener = *(e_loop.get_listener(t_fd));
+    cppevent::throw_if_error(t_fd, "Failed to create timer fd");
     timespec t_spec;
-    t_spec.tv_sec = 2;
+    t_spec.tv_sec = seconds;
     t_spec.tv_nsec = 0;
     itimerspec i_spec = { t_spec, t_spec };
     int status = timerfd_settime(t_fd, 0, &i_spec, NULL);
     cppevent::throw_if_error(status, "Failed to set time");
+    return t_fd;
+}
+
+cppevent::task timed_coroutine(cppevent::event_loop& e_loop) {
+    int t_fd = create_timer_fd(2);
+    auto& listener = *(e_loop.get_listener(t_fd));
     int count = 1;
     std::cout << "This should print every 2 seconds: " << count << std::endl;
     while (true) {
         std::array<std::byte, 8> buf;
-        status = read(t_fd, buf.data(), 8);
+        int status = read(t_fd, buf.data(), 8);
         if (status > 0) { 
             std::cout << "This should print every 2 seconds: " << ++count << std::endl;
             continue;
