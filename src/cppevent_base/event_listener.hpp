@@ -2,31 +2,21 @@
 #define CPPEVENT_BASE_EVENT_LISTENER_HPP
 
 #include <coroutine>
+#include <functional>
 #include <optional>
 
 namespace cppevent {
-
-class event_listener;
-
-struct event_awaiter {
-    event_listener& m_listener;
-    std::optional<std::coroutine_handle<>>& m_handle_opt;
-
-    bool await_ready() { return false; }
-    void await_suspend(std::coroutine_handle<> handle);
-    void await_resume() {}
-};
 
 class event_listener {
 private:
     const int m_epoll_fd;
     const int m_fd;
-    std::optional<std::coroutine_handle<>> m_read_handle_opt;
-    std::optional<std::coroutine_handle<>> m_write_handle_opt;
+    std::optional<std::function<void()>> m_read_handler_opt;
+    std::optional<std::function<void()>> m_write_handler_opt;
 
     void mod_epoll();
 
-    void resume_handle(std::optional<std::coroutine_handle<>>& handle_opt);
+    void run_handler(std::optional<std::function<void()>>& handler_opt);
  
 public:
     event_listener(int epoll_fd, int fd);
@@ -34,13 +24,36 @@ public:
 
     int get_fd() const { return m_fd; }
 
-    event_awaiter await_read();
-    event_awaiter await_write();
+    void set_read_handler(const std::function<void()>& read_handler);
+    void set_write_handler(const std::function<void()>& write_handler);
 
     void on_event(bool can_read, bool can_write);
-
-    friend class event_awaiter;
 };
+
+struct read_awaiter {
+    event_listener& m_listener;
+
+    bool await_ready() { return false; }
+    void await_suspend(std::coroutine_handle<> handle) {
+        m_listener.set_read_handler([&, handle]() {
+            handle.resume();
+        });
+    }
+    void await_resume() {}
+};
+
+struct write_awaiter {
+    event_listener& m_listener;
+
+    bool await_ready() { return false; }
+    void await_suspend(std::coroutine_handle<> handle) {
+        m_listener.set_write_handler([&, handle]() {
+            handle.resume();
+        });
+    }
+    void await_resume() {}
+};
+
 
 }
 

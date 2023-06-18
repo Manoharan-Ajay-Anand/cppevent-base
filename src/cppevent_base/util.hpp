@@ -8,9 +8,13 @@
 
 namespace cppevent {
 
-inline void throw_if_error(int status, std::string prefix) {
+inline void throw_errno(std::string prefix) {
+    throw std::runtime_error(prefix.append(strerror(errno)));
+}
+
+inline void throw_if_error(int status, const std::string& prefix) {
     if (status < 0) {
-        throw std::runtime_error(prefix.append(strerror(errno)));
+        throw_errno(prefix);
     }
 }
 

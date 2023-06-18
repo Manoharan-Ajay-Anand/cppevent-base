@@ -9,7 +9,7 @@
 #include <unistd.h>
 
 const int MAX_EPOLL_ARRAY_SIZE = 1000;
-const int MAX_EPOLL_TIMEOUT = 2000;
+const int MAX_EPOLL_TIMEOUT = 1000;
 
 cppevent::event_loop::event_loop() {
     m_epoll_fd = epoll_create(MAX_EPOLL_ARRAY_SIZE);
@@ -52,7 +52,11 @@ void cppevent::event_loop::run() {
     std::array<epoll_event, MAX_EPOLL_ARRAY_SIZE> events;
     while (true) {
         int count = epoll_wait(m_epoll_fd, events.data(), MAX_EPOLL_ARRAY_SIZE, MAX_EPOLL_TIMEOUT);
-        throw_if_error(count, "EPOLL Wait Failed: ");
-        trigger_events(events.data(), count);
+        if (count >= 0) {
+            trigger_events(events.data(), count);
+            continue;
+        }
+        if (errno == EINTR) { continue; }
+        throw_errno("EPOLL Wait Failed: ");
     }
 }
