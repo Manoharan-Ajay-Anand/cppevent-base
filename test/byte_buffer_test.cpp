@@ -25,9 +25,9 @@ TEST_CASE("byte_buffer write test") {
             CHECK(buffer.capacity() == (ITERATIONS_COUNT - i + 1) * STR_SIZE);
             CHECK(buffer.write(STR.data(), STR_SIZE) == STR_SIZE);
         }
+        CHECK(buffer.write(STR.data(), STR_SIZE) == 0);
         CHECK(buffer.available() == BUFFER_SIZE);
         CHECK(buffer.capacity() == 0);
-        CHECK(buffer.write(STR.data(), STR_SIZE) == 0);
     }
 
     SUBCASE("multiple writes with start offset") {
@@ -38,8 +38,8 @@ TEST_CASE("byte_buffer write test") {
             CHECK(buffer.capacity() == (ITERATIONS_COUNT - i + 1) * STR_SIZE);
             CHECK(buffer.write(STR.data(), STR_SIZE) == STR_SIZE);
         }
+        CHECK(buffer.write(STR.data(), STR_SIZE) == 0);
         CHECK(buffer.available() == BUFFER_SIZE);
         CHECK(buffer.capacity() == 0);
-        CHECK(buffer.write(STR.data(), STR_SIZE) == 0);
     }
 }
