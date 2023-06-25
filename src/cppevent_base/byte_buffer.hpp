@@ -35,6 +35,10 @@ public:
 
     void increment_read_p(long size) {
         m_start += size;
+        if (m_start > BUFFER_SIZE && m_end > BUFFER_SIZE) {
+            m_start -= BUFFER_SIZE;
+            m_end -= BUFFER_SIZE;
+        }
     }
 
     void increment_write_p(long size) {
