@@ -7,7 +7,14 @@
 
 namespace cppevent {
 
-class event_listener {
+class i_event_listener {
+public:
+    virtual void set_read_handler(const std::function<void()>& read_handler) = 0;
+    virtual void set_write_handler(const std::function<void()>& write_handler) = 0;
+    virtual void on_event(bool can_read, bool can_write) = 0;
+};
+
+class event_listener : public i_event_listener {
 private:
     const int m_epoll_fd;
     const int m_fd;
@@ -31,7 +38,7 @@ public:
 };
 
 struct read_awaiter {
-    event_listener& m_listener;
+    i_event_listener& m_listener;
 
     bool await_ready() { return false; }
     void await_suspend(std::coroutine_handle<> handle) {
@@ -43,7 +50,7 @@ struct read_awaiter {
 };
 
 struct write_awaiter {
-    event_listener& m_listener;
+    i_event_listener& m_listener;
 
     bool await_ready() { return false; }
     void await_suspend(std::coroutine_handle<> handle) {
