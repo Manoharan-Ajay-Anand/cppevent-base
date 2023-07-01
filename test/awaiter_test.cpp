@@ -10,11 +10,13 @@ enum class Event {
     WRITE
 };
 
-class test_event_listener : public cppevent::i_event_listener {
+class test_event_listener : public cppevent::event_listener {
 private:
     std::optional<std::function<void()>> m_read_handler_opt;
     std::optional<std::function<void()>> m_write_handler_opt;
 public:
+    test_event_listener(long long id): cppevent::event_listener(id) {}
+
     void set_read_handler(const std::function<void()>& read_handler) {
         m_read_handler_opt = read_handler;
     }
@@ -33,7 +35,7 @@ public:
     }
 };
 
-cppevent::task double_num(int& num, cppevent::i_event_listener& listener, Event event) {
+cppevent::task double_num(int& num, cppevent::event_listener& listener, Event event) {
     if (event == Event::READ) {
         co_await cppevent::read_awaiter { listener };
     } else {
@@ -43,7 +45,7 @@ cppevent::task double_num(int& num, cppevent::i_event_listener& listener, Event 
 }
 
 TEST_CASE("awaiters test") {
-    test_event_listener listener;
+    test_event_listener listener(1);
 
     SUBCASE("read event") {
         int num = SAMPLE_NUM;

@@ -1,6 +1,7 @@
 add_library(cppevent-base STATIC
   src/cppevent_base/event_loop.cpp
-  src/cppevent_base/event_listener.cpp
+  src/cppevent_base/id_store.cpp
+  src/cppevent_base/io_listener.cpp
 )
 
 target_include_directories(cppevent-base PUBLIC src)

@@ -1,44 +1,28 @@
 #ifndef CPPEVENT_BASE_EVENT_LISTENER_HPP
 #define CPPEVENT_BASE_EVENT_LISTENER_HPP
 
+#include <cstdint>
 #include <coroutine>
 #include <functional>
 #include <optional>
 
 namespace cppevent {
 
-class i_event_listener {
+class event_listener {
+protected:
+    const uint64_t m_id;
 public:
+    event_listener(uint64_t id): m_id(id) {}
+
+    uint64_t get_id() { return m_id; }
+
     virtual void set_read_handler(const std::function<void()>& read_handler) = 0;
     virtual void set_write_handler(const std::function<void()>& write_handler) = 0;
     virtual void on_event(bool can_read, bool can_write) = 0;
 };
 
-class event_listener : public i_event_listener {
-private:
-    const int m_epoll_fd;
-    const int m_fd;
-    std::optional<std::function<void()>> m_read_handler_opt;
-    std::optional<std::function<void()>> m_write_handler_opt;
-
-    void mod_epoll();
-
-    void run_handler(std::optional<std::function<void()>>& handler_opt);
- 
-public:
-    event_listener(int epoll_fd, int fd);
-    ~event_listener();
-
-    int get_fd() const { return m_fd; }
-
-    void set_read_handler(const std::function<void()>& read_handler);
-    void set_write_handler(const std::function<void()>& write_handler);
-
-    void on_event(bool can_read, bool can_write);
-};
-
 struct read_awaiter {
-    i_event_listener& m_listener;
+    event_listener& m_listener;
 
     bool await_ready() { return false; }
     void await_suspend(std::coroutine_handle<> handle) {
@@ -50,7 +34,7 @@ struct read_awaiter {
 };
 
 struct write_awaiter {
-    i_event_listener& m_listener;
+    event_listener& m_listener;
 
     bool await_ready() { return false; }
     void await_suspend(std::coroutine_handle<> handle) {
@@ -60,7 +44,6 @@ struct write_awaiter {
     }
     void await_resume() {}
 };
-
 
 }
 

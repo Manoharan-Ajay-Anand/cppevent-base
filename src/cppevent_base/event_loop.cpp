@@ -1,6 +1,7 @@
 #include "event_loop.hpp"
 
 #include "event_listener.hpp"
+#include "io_listener.hpp"
 #include "util.hpp"
 
 #include <array>
@@ -22,17 +23,18 @@ cppevent::event_loop::~event_loop() {
     throw_if_error(status, "Failed to destroy epoll fd: ");
 }
 
-cppevent::event_listener* cppevent::event_loop::get_listener(int fd) {
-    auto& listener_ptr = m_listeners[fd];
-    if (listener_ptr) {
-        return listener_ptr.get();
-    }
-    listener_ptr = std::make_unique<event_listener>(m_epoll_fd, fd);
-    return listener_ptr.get();
+cppevent::event_listener* cppevent::event_loop::get_io_listener(int fd) {
+    auto id = m_id_store.get_id();
+    std::unique_ptr<event_listener> listener = std::make_unique<io_listener>(id, m_epoll_fd, fd);
+    auto* listener_ptr = listener.get();
+    m_listeners[id] = std::move(listener);
+    return listener_ptr;
 }
 
 void cppevent::event_loop::remove_listener(event_listener* listener) {
-    m_listeners.erase(listener->get_fd());
+    auto id = listener->get_id();
+    m_listeners.erase(id);
+    m_id_store.recycle_id(id);
 }
 
 void cppevent::event_loop::trigger_events(epoll_event* events, int count) {
@@ -40,7 +42,7 @@ void cppevent::event_loop::trigger_events(epoll_event* events, int count) {
         epoll_event& event = *(events + i);
         bool can_read = (event.events & EPOLLIN) == EPOLLIN;
         bool can_write = (event.events & EPOLLOUT) == EPOLLOUT;
-        auto it = m_listeners.find(event.data.fd);
+        auto it = m_listeners.find(event.data.u64);
         if (it == m_listeners.end()) {
             continue;
         }
