@@ -57,8 +57,7 @@ public:
         return { get_ptr(m_end) , max_size };
     }
 
-    long read(void* dest_ptr, long size) {
-        std::byte* dest = static_cast<std::byte*>(dest_ptr);
+    long read(std::byte* dest, long size) {
         long size_read = 0;
         while (size > 0) {
             io_chunk chunk = get_read_chunk();
@@ -75,8 +74,11 @@ public:
         return size_read;
     }
 
-    long write(const void* src_ptr, long size) {
-        const std::byte* src = static_cast<const std::byte*>(src_ptr);
+    long read(void* dest, long size) {
+        return read(static_cast<std::byte*>(dest), size);
+    }
+
+    long write(const std::byte* src, long size) {
         long size_written = 0;
         while (size > 0) {
             io_chunk chunk = get_write_chunk();
@@ -91,6 +93,10 @@ public:
             increment_write_p(size_to_write);
         }
         return size_written;
+    }
+
+    long write(const void* src, long size) {
+        return write(static_cast<const std::byte*>(src), size);
     }
 };
 
