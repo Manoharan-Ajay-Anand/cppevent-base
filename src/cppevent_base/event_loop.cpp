@@ -23,7 +23,6 @@ cppevent::event_loop::event_loop() {
 }
 
 cppevent::event_loop::~event_loop() {
-    m_listeners.clear();
     int status = close(m_event_fd);
     throw_if_error(status, "Failed to destroy event fd: ");
     status = close(m_epoll_fd);
@@ -31,25 +30,19 @@ cppevent::event_loop::~event_loop() {
 }
 
 cppevent::event_listener* cppevent::event_loop::get_io_listener(int fd) {
-    auto id = m_id_store.get_id();
-    std::unique_ptr<event_listener> listener = std::make_unique<io_listener>(id, m_epoll_fd, fd);
-    auto* listener_ptr = listener.get();
-    m_listeners[id] = std::move(listener);
-    return listener_ptr;
+    return m_event_bus.get_event_listener([fd, epoll_fd = m_epoll_fd](uint64_t id) {
+        return std::make_unique<io_listener>(id, epoll_fd, fd);
+    });
 }
 
 cppevent::event_listener* cppevent::event_loop::get_signal_listener() {
-    auto id = m_id_store.get_id();
-    std::unique_ptr<event_listener> listener = std::make_unique<signal_listener>(id);
-    auto* listener_ptr = listener.get();
-    m_listeners[id] = std::move(listener);
-    return listener_ptr;
+    return m_event_bus.get_event_listener([](uint64_t id) {
+        return std::make_unique<signal_listener>(id);
+    });
 }
 
 void cppevent::event_loop::remove_listener(event_listener* listener) {
-    auto id = listener->get_id();
-    m_listeners.erase(id);
-    m_id_store.recycle_id(id);
+    m_event_bus.remove_event_listener(listener);
 }
 
 void cppevent::event_loop::send_signal(event_listener* listener, bool can_read, bool can_write) {
@@ -62,33 +55,19 @@ void cppevent::event_loop::send_signal(event_listener* listener, bool can_read, 
     throw_if_error(status, "Failed to write to eventfd: ");
 }
 
-void cppevent::event_loop::trigger_events(epoll_event* events, int count) {
+void cppevent::event_loop::trigger_io_events(epoll_event* events, int count) {
     for (int i = 0; i < count; ++i) {
         epoll_event& event = *(events + i);
         bool can_read = (event.events & EPOLLIN) == EPOLLIN;
         bool can_write = (event.events & EPOLLOUT) == EPOLLOUT;
-        auto it = m_listeners.find(event.data.u64);
-        if (it == m_listeners.end()) {
-            continue;
-        }
-        it->second->on_event(can_read, can_write);
+        m_event_bus.transmit_signal({ event.data.u64, can_read, can_write });
     }
 }
 
 void cppevent::event_loop::call_signal_handlers() {
-    std::queue<event_signal> signals;
-    for (auto& p : m_signals) {
-        signals.push(p.second);
-    }
-    m_signals.clear();
-    while (!signals.empty()) {
-        auto signal = signals.front();
-        signals.pop();
-        auto it = m_listeners.find(signal.m_id);
-        if (it == m_listeners.end()) {
-            continue;
-        }
-        it->second->on_event(signal.m_can_read, signal.m_can_write);
+    std::unordered_map<uint64_t, event_signal> current_signals = std::move(m_signals);
+    for (auto& p : current_signals) {
+        m_event_bus.transmit_signal(p.second);
     }
 }
 
@@ -115,6 +94,6 @@ void cppevent::event_loop::run() {
         if (count < 0 && errno != EINTR) {
             throw_errno("EPOLL Wait Failed: ");
         }
-        trigger_events(events.data(), count);
+        trigger_io_events(events.data(), count);
     }
 }
