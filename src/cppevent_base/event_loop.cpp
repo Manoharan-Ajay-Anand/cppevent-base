@@ -30,13 +30,13 @@ cppevent::event_loop::~event_loop() {
 }
 
 cppevent::event_listener* cppevent::event_loop::get_io_listener(int fd) {
-    return m_event_bus.get_event_listener([fd, epoll_fd = m_epoll_fd](uint64_t id) {
+    return m_event_bus.get_event_listener([fd, epoll_fd = m_epoll_fd](e_id id) {
         return std::make_unique<io_listener>(id, epoll_fd, fd);
     });
 }
 
 cppevent::event_listener* cppevent::event_loop::get_signal_listener() {
-    return m_event_bus.get_event_listener([](uint64_t id) {
+    return m_event_bus.get_event_listener([](e_id id) {
         return std::make_unique<signal_listener>(id);
     });
 }

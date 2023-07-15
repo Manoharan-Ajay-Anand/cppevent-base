@@ -15,7 +15,7 @@ class event_loop {
 private:
     int m_epoll_fd;
     int m_event_fd;
-    std::unordered_map<uint64_t, event_signal> m_signals;
+    std::unordered_map<e_id, event_signal> m_signals;
     event_bus m_event_bus;
 
     void trigger_io_events(epoll_event* events, int count);

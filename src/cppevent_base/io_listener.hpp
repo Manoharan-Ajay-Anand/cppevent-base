@@ -17,7 +17,7 @@ private:
     void run_handler(std::optional<std::function<void()>>& handler_opt);
  
 public:
-    io_listener(uint64_t id, int epoll_fd, int fd);
+    io_listener(e_id id, int epoll_fd, int fd);
     ~io_listener();
 
     int get_fd() const { return m_fd; }

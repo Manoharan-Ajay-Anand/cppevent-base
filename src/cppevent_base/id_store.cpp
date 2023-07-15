@@ -1,6 +1,6 @@
 #include "id_store.hpp"
 
-uint64_t cppevent::id_store::get_id() {
+cppevent::e_id cppevent::id_store::get_id() {
     if (m_recycled.empty()) {
         return ++m_counter;
     }
@@ -9,6 +9,6 @@ uint64_t cppevent::id_store::get_id() {
     return id;
 }
 
-void cppevent::id_store::recycle_id(uint64_t id) {
+void cppevent::id_store::recycle_id(e_id id) {
     m_recycled.push(id);
 }

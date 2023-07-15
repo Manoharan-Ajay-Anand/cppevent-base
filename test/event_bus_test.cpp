@@ -27,7 +27,7 @@ TEST_CASE("event_bus test") {
     bool write_event = false;
     cppevent::event_bus bus;
 
-    const cppevent::create_listener_func create_fn = [&read_event, &write_event](uint64_t id) {
+    const cppevent::create_listener_func create_fn = [&read_event, &write_event](cppevent::e_id id) {
         return std::make_unique<mock_listener>(id, read_event, write_event);
     };
 

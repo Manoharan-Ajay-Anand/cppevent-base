@@ -6,7 +6,7 @@
 
 #include <sys/epoll.h>
 
-cppevent::io_listener::io_listener(uint64_t id, int epoll_fd, int fd): event_listener(id),
+cppevent::io_listener::io_listener(e_id id, int epoll_fd, int fd): event_listener(id),
                                                                        m_epoll_fd(epoll_fd),
                                                                        m_fd(fd) {
     epoll_event e_event;

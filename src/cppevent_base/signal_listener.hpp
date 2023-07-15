@@ -13,7 +13,7 @@ private:
     void run_handler(std::optional<std::function<void()>>& handler_opt);
  
 public:
-    signal_listener(uint64_t id);
+    signal_listener(e_id id);
 
     void set_read_handler(const std::function<void()>& read_handler);
     void set_write_handler(const std::function<void()>& write_handler);
