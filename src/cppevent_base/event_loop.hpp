@@ -20,7 +20,7 @@ private:
 
     void trigger_io_events(epoll_event* events, int count);
     void call_signal_handlers();
-    task run_signal_loop();
+    task<void> run_signal_loop();
 
 public:
     event_loop();

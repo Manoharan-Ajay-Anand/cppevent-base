@@ -71,7 +71,7 @@ void cppevent::event_loop::call_signal_handlers() {
     }
 }
 
-cppevent::task cppevent::event_loop::run_signal_loop() {
+cppevent::task<void> cppevent::event_loop::run_signal_loop() {
     auto& listener = *(get_io_listener(m_event_fd));
     uint64_t count;
     while (true) {

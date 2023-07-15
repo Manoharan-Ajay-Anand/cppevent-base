@@ -35,7 +35,7 @@ public:
     }
 };
 
-cppevent::task double_num(int& num, cppevent::event_listener& listener, Event event) {
+cppevent::task<void> double_num(int& num, cppevent::event_listener& listener, Event event) {
     if (event == Event::READ) {
         co_await cppevent::read_awaiter { listener };
     } else {
