@@ -45,14 +45,17 @@ void cppevent::event_loop::remove_listener(event_listener* listener) {
     m_event_bus.remove_event_listener(listener);
 }
 
-void cppevent::event_loop::send_signal(event_listener* listener, bool can_read, bool can_write) {
-    auto id = listener->get_id();
+void cppevent::event_loop::send_signal(e_id id, bool can_read, bool can_write) {
     auto& signal = m_signals[id];
     signal.m_id = id;
     signal.m_can_read |= can_read;
     signal.m_can_write |= can_write;
     int status = eventfd_write(m_event_fd, 1);
     throw_if_error(status, "Failed to write to eventfd: ");
+}
+
+void cppevent::event_loop::send_signal(event_listener* listener, bool can_read, bool can_write) {
+    send_signal(listener->get_id(), can_read, can_write);
 }
 
 void cppevent::event_loop::trigger_io_events(epoll_event* events, int count) {

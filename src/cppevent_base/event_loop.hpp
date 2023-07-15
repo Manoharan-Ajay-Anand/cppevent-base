@@ -28,6 +28,7 @@ public:
     event_listener* get_io_listener(int fd);
     event_listener* get_signal_listener();
     void remove_listener(event_listener* listener);
+    void send_signal(e_id id, bool can_read, bool can_write);
     void send_signal(event_listener* listener, bool can_read, bool can_write);
     void run();
 };
