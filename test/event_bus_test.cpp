@@ -8,9 +8,9 @@ private:
     bool& m_read_event;
     bool& m_write_event;
 public:
-    mock_listener(uint64_t id, bool& read_event, bool& write_event): cppevent::event_listener(id),
-                                                                     m_read_event(read_event),
-                                                                     m_write_event(write_event) {
+    mock_listener(cppevent::e_id id, bool& read_event, bool& write_event): cppevent::event_listener(id),
+                                                                           m_read_event(read_event),
+                                                                           m_write_event(write_event) {
     }
 
     void set_read_handler(const std::function<void()>& read_handler) {}

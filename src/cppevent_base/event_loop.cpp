@@ -68,7 +68,7 @@ void cppevent::event_loop::trigger_io_events(epoll_event* events, int count) {
 }
 
 void cppevent::event_loop::call_signal_handlers() {
-    std::unordered_map<uint64_t, event_signal> current_signals = std::move(m_signals);
+    std::unordered_map<e_id, event_signal> current_signals = std::move(m_signals);
     for (auto& p : current_signals) {
         m_event_bus.transmit_signal(p.second);
     }
