@@ -20,9 +20,11 @@ cppevent::event_loop::event_loop() {
     throw_if_error(m_epoll_fd, "Failed to create epoll fd: ");
     m_event_fd = eventfd(0, EFD_NONBLOCK);
     throw_if_error(m_event_fd, "Failed to create event fd: ");
+    m_event_bus = std::make_unique<event_bus>();
 }
 
 cppevent::event_loop::~event_loop() {
+    m_event_bus.reset();
     int status = close(m_event_fd);
     throw_if_error(status, "Failed to destroy event fd: ");
     status = close(m_epoll_fd);
@@ -30,19 +32,19 @@ cppevent::event_loop::~event_loop() {
 }
 
 cppevent::event_listener* cppevent::event_loop::get_io_listener(int fd) {
-    return m_event_bus.get_event_listener([fd, epoll_fd = m_epoll_fd](e_id id) {
+    return m_event_bus->get_event_listener([fd, epoll_fd = m_epoll_fd](e_id id) {
         return std::make_unique<io_listener>(id, epoll_fd, fd);
     });
 }
 
 cppevent::event_listener* cppevent::event_loop::get_signal_listener() {
-    return m_event_bus.get_event_listener([](e_id id) {
+    return m_event_bus->get_event_listener([](e_id id) {
         return std::make_unique<signal_listener>(id);
     });
 }
 
 void cppevent::event_loop::remove_listener(event_listener* listener) {
-    m_event_bus.remove_event_listener(listener);
+    m_event_bus->remove_event_listener(listener);
 }
 
 void cppevent::event_loop::send_signal(e_id id, bool can_read, bool can_write) {
@@ -63,14 +65,14 @@ void cppevent::event_loop::trigger_io_events(epoll_event* events, int count) {
         epoll_event& event = *(events + i);
         bool can_read = (event.events & EPOLLIN) == EPOLLIN;
         bool can_write = (event.events & EPOLLOUT) == EPOLLOUT;
-        m_event_bus.transmit_signal({ event.data.u64, can_read, can_write });
+        m_event_bus->transmit_signal({ event.data.u64, can_read, can_write });
     }
 }
 
 void cppevent::event_loop::call_signal_handlers() {
     std::unordered_map<e_id, event_signal> current_signals = std::move(m_signals);
     for (auto& p : current_signals) {
-        m_event_bus.transmit_signal(p.second);
+        m_event_bus->transmit_signal(p.second);
     }
 }
 
@@ -89,10 +91,10 @@ cppevent::task<void> cppevent::event_loop::run_signal_loop() {
     }
 }
 
-void cppevent::event_loop::run() {
+void cppevent::event_loop::run(const bool& control) {
     run_signal_loop();
     std::array<epoll_event, MAX_EPOLL_ARRAY_SIZE> events;
-    while (true) {
+    while (control) {
         int count = epoll_wait(m_epoll_fd, events.data(), MAX_EPOLL_ARRAY_SIZE, MAX_EPOLL_TIMEOUT);
         if (count < 0 && errno != EINTR) {
             throw_errno("EPOLL Wait Failed: ");

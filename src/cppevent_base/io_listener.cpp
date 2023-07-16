@@ -68,5 +68,7 @@ void cppevent::io_listener::on_event(bool can_read, bool can_write) {
     if (can_write) {
         run_handler(m_write_handler_opt);
     }
-    mod_epoll();
+    if (m_read_handler_opt || m_write_handler_opt) {
+        mod_epoll();
+    }
 }
