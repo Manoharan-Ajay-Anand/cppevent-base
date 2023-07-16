@@ -13,6 +13,7 @@ namespace cppevent {
 
 class event_loop {
 private:
+    bool control;
     int m_epoll_fd;
     int m_event_fd;
     std::unordered_map<e_id, event_signal> m_signals;
@@ -30,7 +31,8 @@ public:
     void remove_listener(event_listener* listener);
     void send_signal(e_id id, bool can_read, bool can_write);
     void send_signal(event_listener* listener, bool can_read, bool can_write);
-    void run(const bool& control);
+    void run();
+    void stop();
 };
 
 }

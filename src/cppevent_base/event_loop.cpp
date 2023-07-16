@@ -16,6 +16,7 @@ const int MAX_EPOLL_ARRAY_SIZE = 1000;
 const int MAX_EPOLL_TIMEOUT = 500;
 
 cppevent::event_loop::event_loop() {
+    control = true;
     m_epoll_fd = epoll_create(MAX_EPOLL_ARRAY_SIZE);
     throw_if_error(m_epoll_fd, "Failed to create epoll fd: ");
     m_event_fd = eventfd(0, EFD_NONBLOCK);
@@ -91,7 +92,7 @@ cppevent::task<void> cppevent::event_loop::run_signal_loop() {
     }
 }
 
-void cppevent::event_loop::run(const bool& control) {
+void cppevent::event_loop::run() {
     run_signal_loop();
     std::array<epoll_event, MAX_EPOLL_ARRAY_SIZE> events;
     while (control) {
@@ -101,4 +102,8 @@ void cppevent::event_loop::run(const bool& control) {
         }
         trigger_io_events(events.data(), count);
     }
+}
+
+void cppevent::event_loop::stop() {
+    control = false;
 }
