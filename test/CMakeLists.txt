@@ -4,6 +4,7 @@ add_executable(cppevent-base-test EXCLUDE_FROM_ALL
     awaiter_test.cpp
     id_store_test.cpp
     event_bus_test.cpp
+    util_test.cpp
 )
 
 target_link_libraries(cppevent-base-test PRIVATE
