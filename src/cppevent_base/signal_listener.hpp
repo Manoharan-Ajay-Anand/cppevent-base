@@ -13,12 +13,12 @@ private:
     void run_handler(std::optional<std::function<void()>>& handler_opt);
  
 public:
-    signal_listener(e_id id);
+    signal_listener(e_id id, event_bus& m_bus);
 
-    void set_read_handler(const std::function<void()>& read_handler);
-    void set_write_handler(const std::function<void()>& write_handler);
+    void set_read_handler(const std::function<void()>& read_handler) override;
+    void set_write_handler(const std::function<void()>& write_handler) override;
 
-    void on_event(bool can_read, bool can_write);
+    void on_event(bool can_read, bool can_write) override;
 };
 
 }

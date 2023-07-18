@@ -15,7 +15,7 @@ private:
     std::optional<std::function<void()>> m_read_handler_opt;
     std::optional<std::function<void()>> m_write_handler_opt;
 public:
-    test_event_listener(long long id): cppevent::event_listener(id) {}
+    test_event_listener(cppevent::e_id id, cppevent::event_bus& bus): cppevent::event_listener(id, bus) {}
 
     void set_read_handler(const std::function<void()>& read_handler) {
         m_read_handler_opt = read_handler;
@@ -45,7 +45,8 @@ cppevent::task<void> double_num(int& num, cppevent::event_listener& listener, Ev
 }
 
 TEST_CASE("awaiters test") {
-    test_event_listener listener(1);
+    cppevent::event_bus bus;
+    test_event_listener listener(1, bus);
 
     SUBCASE("read event") {
         int num = SAMPLE_NUM;

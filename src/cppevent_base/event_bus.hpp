@@ -10,9 +10,11 @@
 
 namespace cppevent {
 
+class event_bus;
+
 class event_listener;
 
-using create_listener_func = std::function<std::unique_ptr<event_listener>(e_id)>;
+using create_listener = std::function<std::unique_ptr<event_listener>(e_id, event_bus&)>;
 
 struct event_signal {
     e_id m_id;
@@ -23,11 +25,11 @@ struct event_signal {
 class event_bus {
 private:
     id_store m_id_store;
-    std::unordered_map<e_id, std::unique_ptr<event_listener>> m_listeners;
+    std::unordered_map<e_id, event_listener*> m_listeners;
 
 public:
-    event_listener* get_event_listener(create_listener_func create_func);
-    void remove_event_listener(event_listener* listener);
+    std::unique_ptr<event_listener> get_event_listener(create_listener create);
+    void remove_event_listener(e_id id);
     void transmit_signal(const event_signal& signal);
 };
 

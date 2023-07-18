@@ -6,9 +6,12 @@
 
 #include <sys/epoll.h>
 
-cppevent::io_listener::io_listener(e_id id, int epoll_fd, int fd): event_listener(id),
-                                                                       m_epoll_fd(epoll_fd),
-                                                                       m_fd(fd) {
+cppevent::io_listener::io_listener(e_id id,
+                                   event_bus& e_bus,
+                                   int epoll_fd,
+                                   int fd): event_listener(id, e_bus),
+                                            m_epoll_fd(epoll_fd),
+                                            m_fd(fd) {
     epoll_event e_event;
     e_event.data.u64 = m_id;
     int status = epoll_ctl(m_epoll_fd, EPOLL_CTL_ADD, m_fd, &e_event);
@@ -16,10 +19,11 @@ cppevent::io_listener::io_listener(e_id id, int epoll_fd, int fd): event_listene
 }
 
 cppevent::io_listener::~io_listener() {
+    m_event_bus.remove_event_listener(m_id);
     epoll_event e_event;
     e_event.data.u64 = m_id;
     int status = epoll_ctl(m_epoll_fd, EPOLL_CTL_DEL, m_fd, &e_event);
-    throw_if_error(status, "Failed to delete fd to epoll: ");
+    throw_if_error(status, "Failed to delete fd from epoll: ");
 }
 
 void cppevent::io_listener::mod_epoll() {

@@ -22,7 +22,7 @@ cppevent::timer::timer(std::chrono::nanoseconds interval, event_loop& loop): m_l
 }
 
 cppevent::timer::~timer() {
-    m_loop.remove_listener(m_listener);
+    m_listener.reset();
     int status = close(m_fd);
     cppevent::throw_if_error(status, "Failed to close timer fd: ");
 }

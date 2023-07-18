@@ -3,6 +3,8 @@
 
 #include "types.hpp"
 
+#include "event_bus.hpp"
+
 #include <cstdint>
 #include <coroutine>
 #include <functional>
@@ -13,8 +15,13 @@ namespace cppevent {
 class event_listener {
 protected:
     const e_id m_id;
+    event_bus& m_event_bus;
 public:
-    event_listener(e_id id): m_id(id) {}
+    event_listener(e_id id, event_bus& e_bus): m_id(id), m_event_bus(e_bus) {}
+
+    virtual ~event_listener() {
+        m_event_bus.remove_event_listener(m_id);
+    }    
 
     e_id get_id() { return m_id; }
 
@@ -28,7 +35,7 @@ struct read_awaiter {
 
     bool await_ready() { return false; }
     void await_suspend(std::coroutine_handle<> handle) {
-        m_listener.set_read_handler([&, handle]() {
+        m_listener.set_read_handler([handle]() {
             handle.resume();
         });
     }
@@ -40,7 +47,7 @@ struct write_awaiter {
 
     bool await_ready() { return false; }
     void await_suspend(std::coroutine_handle<> handle) {
-        m_listener.set_write_handler([&, handle]() {
+        m_listener.set_write_handler([handle]() {
             handle.resume();
         });
     }

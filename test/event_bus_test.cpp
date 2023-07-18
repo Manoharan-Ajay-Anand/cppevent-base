@@ -8,7 +8,8 @@ private:
     bool& m_read_event;
     bool& m_write_event;
 public:
-    mock_listener(cppevent::e_id id, bool& read_event, bool& write_event): cppevent::event_listener(id),
+    mock_listener(cppevent::e_id id, cppevent::event_bus& bus, bool& read_event, bool& write_event): 
+                                                                           cppevent::event_listener(id, bus),
                                                                            m_read_event(read_event),
                                                                            m_write_event(write_event) {
     }
@@ -27,33 +28,33 @@ TEST_CASE("event_bus test") {
     bool write_event = false;
     cppevent::event_bus bus;
 
-    const cppevent::create_listener_func create_fn = [&read_event, &write_event](cppevent::e_id id) {
-        return std::make_unique<mock_listener>(id, read_event, write_event);
+    const cppevent::create_listener create_fn = [&read_event, &write_event](cppevent::e_id id, cppevent::event_bus& bus) {
+        return std::make_unique<mock_listener>(id, bus, read_event, write_event);
     };
 
     SUBCASE("read only signal") {
-        auto* listener = bus.get_event_listener(create_fn);
+        std::unique_ptr<cppevent::event_listener> listener = bus.get_event_listener(create_fn);
         bus.transmit_signal({ listener->get_id(), true, false });
         CHECK(read_event);
         CHECK_FALSE(write_event);
     }
 
     SUBCASE("write only signal") {
-        auto* listener = bus.get_event_listener(create_fn);
+        std::unique_ptr<cppevent::event_listener> listener = bus.get_event_listener(create_fn);
         bus.transmit_signal({ listener->get_id(), false, true });
         CHECK_FALSE(read_event);
         CHECK(write_event);
     }
 
     SUBCASE("read and write signal") {
-        auto* listener = bus.get_event_listener(create_fn);
+        std::unique_ptr<cppevent::event_listener> listener = bus.get_event_listener(create_fn);
         bus.transmit_signal({ listener->get_id(), true, true });
         CHECK(read_event);
         CHECK(write_event);
     }
 
     SUBCASE("no signal") {
-        auto* listener = bus.get_event_listener(create_fn);
+        std::unique_ptr<cppevent::event_listener> listener = bus.get_event_listener(create_fn);
         bus.transmit_signal({ listener->get_id() * 10, true, true });
         CHECK_FALSE(read_event);
         CHECK_FALSE(write_event);

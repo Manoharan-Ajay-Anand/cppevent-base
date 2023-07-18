@@ -4,6 +4,7 @@
 #include "task.hpp"
 
 #include <chrono>
+#include <memory>
 
 namespace cppevent {
 
@@ -13,7 +14,7 @@ class event_listener;
 
 class timer {
 private:
-    event_listener* m_listener;
+    std::unique_ptr<event_listener> m_listener;
     event_loop& m_loop;
     int m_fd;
 public:

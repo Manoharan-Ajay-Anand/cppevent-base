@@ -1,6 +1,6 @@
 #include "signal_listener.hpp"
 
-cppevent::signal_listener::signal_listener(e_id id): event_listener(id) {    
+cppevent::signal_listener::signal_listener(e_id id, event_bus& m_bus): event_listener(id, m_bus) {    
 }
 
 void cppevent::signal_listener::run_handler(std::optional<std::function<void()>>& handler_opt) {
