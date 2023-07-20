@@ -21,7 +21,13 @@ public:
 
     virtual ~event_listener() {
         m_event_bus.remove_event_listener(m_id);
-    }    
+    }
+
+    event_listener(const event_listener&) = delete;
+    event_listener& operator=(const event_listener&) = delete;
+
+    event_listener(event_listener&&) = delete;
+    event_listener& operator=(event_listener&&) = delete;    
 
     e_id get_id() { return m_id; }
 
