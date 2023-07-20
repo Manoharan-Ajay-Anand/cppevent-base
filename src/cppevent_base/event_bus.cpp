@@ -6,7 +6,7 @@ std::unique_ptr<cppevent::event_listener> cppevent::event_bus::get_event_listene
     e_id id = m_id_store.get_id();
     std::unique_ptr<event_listener> listener = create(id, *this);
     m_listeners[id] = listener.get();
-    return std::move(listener);
+    return listener;
 }
 
 void cppevent::event_bus::remove_event_listener(e_id id) {
