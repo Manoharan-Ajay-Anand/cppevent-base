@@ -27,7 +27,7 @@ cppevent::timer::~timer() {
     cppevent::throw_if_error(status, "Failed to close timer fd: ");
 }
 
-cppevent::task<void> cppevent::timer::wait() {
+cppevent::awaitable_task<void> cppevent::timer::wait() {
     std::array<std::byte, 8> buf;
     while (read(m_fd, buf.data(), 8) < 0) {
         if (errno == EAGAIN || errno == EWOULDBLOCK) {

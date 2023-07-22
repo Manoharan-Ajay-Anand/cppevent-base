@@ -12,7 +12,7 @@ cppevent::io_listener::io_listener(e_id id,
                                    int fd): event_listener(id, e_bus),
                                             m_epoll_fd(epoll_fd),
                                             m_fd(fd) {
-    epoll_event e_event;
+    epoll_event e_event {};
     e_event.data.u64 = m_id;
     int status = epoll_ctl(m_epoll_fd, EPOLL_CTL_ADD, m_fd, &e_event);
     throw_if_error(status, "Failed to add fd to epoll: ");
@@ -20,7 +20,7 @@ cppevent::io_listener::io_listener(e_id id,
 
 cppevent::io_listener::~io_listener() {
     m_event_bus.remove_event_listener(m_id);
-    epoll_event e_event;
+    epoll_event e_event {};
     e_event.data.u64 = m_id;
     int status = epoll_ctl(m_epoll_fd, EPOLL_CTL_DEL, m_fd, &e_event);
     throw_if_error(status, "Failed to delete fd from epoll: ");

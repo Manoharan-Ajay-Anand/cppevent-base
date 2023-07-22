@@ -13,7 +13,7 @@ namespace cppevent {
 
 class event_loop {
 private:
-    bool control;
+    bool m_running;
     int m_epoll_fd;
     int m_event_fd;
     std::unordered_map<e_id, event_signal> m_signals;
@@ -22,7 +22,7 @@ private:
     void trigger_io_events(epoll_event* events, int count);
 
     void call_signal_handlers();
-    task<void> run_signal_loop();
+    awaitable_task<void> run_signal_loop();
 
 public:
     event_loop();

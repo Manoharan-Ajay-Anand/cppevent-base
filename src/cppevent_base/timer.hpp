@@ -21,7 +21,7 @@ public:
     timer(std::chrono::nanoseconds interval, event_loop& loop);
     ~timer();
 
-    task<void> wait();
+    awaitable_task<void> wait();
 };
 
 }

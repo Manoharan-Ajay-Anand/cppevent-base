@@ -7,6 +7,19 @@
 
 namespace cppevent {
 
+struct task {
+    struct promise_type {
+        task get_return_object() { return {}; }
+
+        std::suspend_never initial_suspend() { return {}; }
+        std::suspend_never final_suspend() noexcept { return {}; }
+        
+        void unhandled_exception() {}
+        
+        void return_void() {}
+    };
+};
+
 template <typename T>
 struct final_awaiter {
     bool await_ready() noexcept { return false; }
@@ -23,14 +36,14 @@ struct final_awaiter {
 };
 
 template <typename T>
-struct task {
+struct awaitable_task {
     struct promise_type {
 
         std::optional<T> m_val_opt;
         std::coroutine_handle<> m_waiting;
         std::exception_ptr m_exception;
 
-        task<T> get_return_object() {
+        awaitable_task<T> get_return_object() {
             return { std::coroutine_handle<promise_type>::from_promise(*this) };
         }
 
@@ -52,6 +65,10 @@ struct task {
 
     std::coroutine_handle<promise_type> m_handle;
 
+    ~awaitable_task() {
+        m_handle.destroy();
+    }
+
     bool await_ready() noexcept {
         return m_handle.done();
     }
@@ -70,13 +87,13 @@ struct task {
 };
 
 template<>
-struct task<void> {
+struct awaitable_task<void> {
     struct promise_type {
 
         std::coroutine_handle<> m_waiting;
         std::exception_ptr m_exception;
 
-        task<void> get_return_object() {
+        awaitable_task<void> get_return_object() {
             return { std::coroutine_handle<promise_type>::from_promise(*this) };
         }
 
@@ -91,6 +108,10 @@ struct task<void> {
     };
 
     std::coroutine_handle<promise_type> m_handle;
+
+    ~awaitable_task() {
+        m_handle.destroy();
+    }
 
     bool await_ready() noexcept {
         return m_handle.done();

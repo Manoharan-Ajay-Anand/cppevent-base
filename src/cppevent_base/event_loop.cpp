@@ -16,7 +16,7 @@ const int MAX_EPOLL_ARRAY_SIZE = 1000;
 const int MAX_EPOLL_TIMEOUT = 500;
 
 cppevent::event_loop::event_loop() {
-    control = true;
+    m_running = true;
     m_epoll_fd = epoll_create(MAX_EPOLL_ARRAY_SIZE);
     throw_if_error(m_epoll_fd, "Failed to create epoll fd: ");
     m_event_fd = eventfd(0, EFD_NONBLOCK);
@@ -52,7 +52,7 @@ void cppevent::event_loop::send_signal(e_id id, bool can_read, bool can_write) {
 }
 
 void cppevent::event_loop::trigger_io_events(epoll_event* events, int count) {
-    for (int i = 0; i < count; ++i) {
+    for (int i = 0; i < count && m_running; ++i) {
         epoll_event& event = *(events + i);
         bool can_read = (event.events & EPOLLIN) == EPOLLIN;
         bool can_write = (event.events & EPOLLOUT) == EPOLLOUT;
@@ -61,16 +61,16 @@ void cppevent::event_loop::trigger_io_events(epoll_event* events, int count) {
 }
 
 void cppevent::event_loop::call_signal_handlers() {
-    std::unordered_map<e_id, event_signal> current_signals = std::move(m_signals);
-    for (auto& p : current_signals) {
-        m_event_bus.transmit_signal(p.second);
+    std::unordered_map<e_id, event_signal> signals = std::move(m_signals);
+    for (auto it = signals.begin(); it != signals.end() && m_running; ++it) {
+        m_event_bus.transmit_signal(it->second);
     }
 }
 
-cppevent::task<void> cppevent::event_loop::run_signal_loop() {
+cppevent::awaitable_task<void> cppevent::event_loop::run_signal_loop() {
     std::unique_ptr<event_listener> listener = get_io_listener(m_event_fd);
     uint64_t count;
-    while (true) {
+    while (m_running) {
         int status = eventfd_read(m_event_fd, &count);
         if (status == 0) {
             call_signal_handlers();
@@ -83,9 +83,9 @@ cppevent::task<void> cppevent::event_loop::run_signal_loop() {
 }
 
 void cppevent::event_loop::run() {
-    run_signal_loop();
+    awaitable_task<void> t = run_signal_loop();
     std::array<epoll_event, MAX_EPOLL_ARRAY_SIZE> events;
-    while (control) {
+    while (m_running) {
         int count = epoll_wait(m_epoll_fd, events.data(), MAX_EPOLL_ARRAY_SIZE, MAX_EPOLL_TIMEOUT);
         if (count < 0 && errno != EINTR) {
             throw_errno("EPOLL Wait Failed: ");
@@ -95,5 +95,5 @@ void cppevent::event_loop::run() {
 }
 
 void cppevent::event_loop::stop() {
-    control = false;
+    m_running = false;
 }
