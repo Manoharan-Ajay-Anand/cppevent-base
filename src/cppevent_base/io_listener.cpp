@@ -12,22 +12,11 @@ cppevent::io_listener::io_listener(e_id id,
                                    int fd): event_listener(id, e_bus),
                                             m_epoll_fd(epoll_fd),
                                             m_fd(fd) {
-    epoll_event e_event {};
-    e_event.data.u64 = m_id;
-    int status = epoll_ctl(m_epoll_fd, EPOLL_CTL_ADD, m_fd, &e_event);
-    throw_if_error(status, "Failed to add fd to epoll: ");
-}
-
-cppevent::io_listener::~io_listener() {
-    m_event_bus.remove_event_listener(m_id);
-    epoll_event e_event {};
-    e_event.data.u64 = m_id;
-    int status = epoll_ctl(m_epoll_fd, EPOLL_CTL_DEL, m_fd, &e_event);
-    throw_if_error(status, "Failed to delete fd from epoll: ");
+    m_epoll_added = false;
 }
 
 void cppevent::io_listener::mod_epoll() {
-    epoll_event e_event;
+    epoll_event e_event {};
     e_event.data.u64 = m_id;
     e_event.events = EPOLLONESHOT;
     if (m_read_handler_opt) {
@@ -36,7 +25,12 @@ void cppevent::io_listener::mod_epoll() {
     if (m_write_handler_opt) {
         e_event.events |= EPOLLOUT;
     }
-    int status = epoll_ctl(m_epoll_fd, EPOLL_CTL_MOD, m_fd, &e_event);
+    int epoll_op = EPOLL_CTL_MOD;
+    if (!m_epoll_added) {
+        epoll_op = EPOLL_CTL_ADD;
+        m_epoll_added = true;
+    } 
+    int status = epoll_ctl(m_epoll_fd, epoll_op, m_fd, &e_event);
     throw_if_error(status, "Failed to mod fd to epoll: ");
 }
 

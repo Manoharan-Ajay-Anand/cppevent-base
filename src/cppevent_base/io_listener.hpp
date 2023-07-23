@@ -7,6 +7,7 @@ namespace cppevent {
 
 class io_listener : public event_listener {
 private:
+    bool m_epoll_added;
     const int m_epoll_fd;
     const int m_fd;
     std::optional<std::function<void()>> m_read_handler_opt;
@@ -18,7 +19,6 @@ private:
  
 public:
     io_listener(e_id id, event_bus& e_bus, int epoll_fd, int fd);
-    ~io_listener() override;
 
     int get_fd() const { return m_fd; }
 

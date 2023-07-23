@@ -63,7 +63,11 @@ struct awaitable_task {
         }
     };
 
+private:
     std::coroutine_handle<promise_type> m_handle;
+
+public:
+    awaitable_task(std::coroutine_handle<promise_type> handle): m_handle(handle) {}
 
     ~awaitable_task() {
         m_handle.destroy();
@@ -106,8 +110,11 @@ struct awaitable_task<void> {
         
         void return_void() {}
     };
-
+private:
     std::coroutine_handle<promise_type> m_handle;
+
+public:
+    awaitable_task(std::coroutine_handle<promise_type> handle): m_handle(handle) {}
 
     ~awaitable_task() {
         m_handle.destroy();
