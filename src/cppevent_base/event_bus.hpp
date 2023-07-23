@@ -7,6 +7,7 @@
 #include <memory>
 #include <unordered_map>
 #include <vector>
+#include <queue>
 
 namespace cppevent {
 
@@ -25,10 +26,10 @@ struct event_signal {
 class event_bus {
 private:
     e_id m_id_counter = 0;
-    std::unordered_map<e_id, event_listener*> m_listeners;
-
+    std::unordered_map<e_id, std::unique_ptr<event_listener>> m_listeners;
+    std::queue<e_id> m_marked_deletion;
 public:
-    std::unique_ptr<event_listener> get_event_listener(create_listener create);
+    event_listener* get_event_listener(create_listener create);
     void remove_event_listener(e_id id);
     void transmit_signal(const event_signal& signal);
 };

@@ -24,6 +24,7 @@ cppevent::timer::timer(std::chrono::nanoseconds interval, event_loop& loop): m_l
 cppevent::timer::~timer() {
     int status = close(m_fd);
     cppevent::throw_if_error(status, "Failed to close timer fd: ");
+    m_listener->detach();
 }
 
 cppevent::awaitable_task<void> cppevent::timer::wait() {

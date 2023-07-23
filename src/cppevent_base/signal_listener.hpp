@@ -3,6 +3,8 @@
 
 #include "event_listener.hpp"
 
+#include <optional>
+
 namespace cppevent {
 
 class signal_listener : public event_listener {

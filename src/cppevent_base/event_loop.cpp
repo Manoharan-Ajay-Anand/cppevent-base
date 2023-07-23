@@ -30,13 +30,13 @@ cppevent::event_loop::~event_loop() {
     throw_if_error(status, "Failed to destroy epoll fd: ");
 }
 
-std::unique_ptr<cppevent::event_listener> cppevent::event_loop::get_io_listener(int fd) {
+cppevent::event_listener* cppevent::event_loop::get_io_listener(int fd) {
     return m_event_bus.get_event_listener([fd, epoll_fd = m_epoll_fd](e_id id, event_bus& e_bus) {
         return std::make_unique<io_listener>(id, e_bus, epoll_fd, fd);
     });
 }
 
-std::unique_ptr<cppevent::event_listener> cppevent::event_loop::get_signal_listener() {
+cppevent::event_listener* cppevent::event_loop::get_signal_listener() {
     return m_event_bus.get_event_listener([](e_id id, event_bus& e_bus) {
         return std::make_unique<signal_listener>(id, e_bus);
     });
@@ -68,7 +68,7 @@ void cppevent::event_loop::call_signal_handlers() {
 }
 
 cppevent::awaitable_task<void> cppevent::event_loop::run_signal_loop() {
-    std::unique_ptr<event_listener> listener = get_io_listener(m_event_fd);
+    event_listener* listener = get_io_listener(m_event_fd);
     uint64_t count;
     while (m_running) {
         int status = eventfd_read(m_event_fd, &count);
@@ -80,6 +80,7 @@ cppevent::awaitable_task<void> cppevent::event_loop::run_signal_loop() {
             throw_errno("Failed to read from eventfd: ");
         }
     }
+    listener->detach();
 }
 
 void cppevent::event_loop::run() {

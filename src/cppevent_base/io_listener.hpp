@@ -3,11 +3,17 @@
 
 #include "event_listener.hpp"
 
+#include <optional>
+
+#include <sys/epoll.h>
+
 namespace cppevent {
 
 class io_listener : public event_listener {
 private:
-    bool m_epoll_added;
+    uint32_t m_polling_events;
+    epoll_event m_event;
+    int m_epoll_op;
     const int m_epoll_fd;
     const int m_fd;
     std::optional<std::function<void()>> m_read_handler_opt;
@@ -15,7 +21,7 @@ private:
 
     void mod_epoll();
 
-    void run_handler(std::optional<std::function<void()>>& handler_opt);
+    void run_handler(bool can_op, uint32_t op, std::optional<std::function<void()>>& handler_opt);
  
 public:
     io_listener(e_id id, event_bus& e_bus, int epoll_fd, int fd);

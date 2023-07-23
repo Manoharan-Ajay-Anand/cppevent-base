@@ -14,7 +14,7 @@ class event_listener;
 
 class timer {
 private:
-    std::unique_ptr<event_listener> m_listener;
+    event_listener* m_listener;
     event_loop& m_loop;
     int m_fd;
 public:

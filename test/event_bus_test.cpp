@@ -33,28 +33,28 @@ TEST_CASE("event_bus test") {
     };
 
     SUBCASE("read only signal") {
-        std::unique_ptr<cppevent::event_listener> listener = bus.get_event_listener(create_fn);
+        cppevent::event_listener* listener = bus.get_event_listener(create_fn);
         bus.transmit_signal({ listener->get_id(), true, false });
         CHECK(read_event);
         CHECK_FALSE(write_event);
     }
 
     SUBCASE("write only signal") {
-        std::unique_ptr<cppevent::event_listener> listener = bus.get_event_listener(create_fn);
+        cppevent::event_listener* listener = bus.get_event_listener(create_fn);
         bus.transmit_signal({ listener->get_id(), false, true });
         CHECK_FALSE(read_event);
         CHECK(write_event);
     }
 
     SUBCASE("read and write signal") {
-        std::unique_ptr<cppevent::event_listener> listener = bus.get_event_listener(create_fn);
+        cppevent::event_listener* listener = bus.get_event_listener(create_fn);
         bus.transmit_signal({ listener->get_id(), true, true });
         CHECK(read_event);
         CHECK(write_event);
     }
 
     SUBCASE("no signal") {
-        std::unique_ptr<cppevent::event_listener> listener = bus.get_event_listener(create_fn);
+        cppevent::event_listener* listener = bus.get_event_listener(create_fn);
         bus.transmit_signal({ listener->get_id() * 10, true, true });
         CHECK_FALSE(read_event);
         CHECK_FALSE(write_event);

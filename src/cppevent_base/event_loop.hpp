@@ -28,8 +28,8 @@ public:
     event_loop();
     ~event_loop();
 
-    std::unique_ptr<event_listener> get_io_listener(int fd);
-    std::unique_ptr<event_listener> get_signal_listener();
+    event_listener* get_io_listener(int fd);
+    event_listener* get_signal_listener();
     
     void send_signal(e_id id, bool can_read, bool can_write);
     

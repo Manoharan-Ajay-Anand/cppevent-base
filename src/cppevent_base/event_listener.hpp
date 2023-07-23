@@ -8,7 +8,6 @@
 #include <cstdint>
 #include <coroutine>
 #include <functional>
-#include <optional>
 
 namespace cppevent {
 
@@ -18,10 +17,6 @@ protected:
     event_bus& m_event_bus;
 public:
     event_listener(e_id id, event_bus& e_bus): m_id(id), m_event_bus(e_bus) {}
-
-    virtual ~event_listener() {
-        m_event_bus.remove_event_listener(m_id);
-    }
 
     event_listener(const event_listener&) = delete;
     event_listener& operator=(const event_listener&) = delete;
@@ -34,6 +29,10 @@ public:
     virtual void set_read_handler(const std::function<void()>& read_handler) = 0;
     virtual void set_write_handler(const std::function<void()>& write_handler) = 0;
     virtual void on_event(bool can_read, bool can_write) = 0;
+
+    void detach() {
+        m_event_bus.remove_event_listener(m_id);
+    }
 };
 
 struct read_awaiter {
