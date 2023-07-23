@@ -1,7 +1,7 @@
 #ifndef CPPEVENT_BASE_EVENT_BUS_HPP
 #define CPPEVENT_BASE_EVENT_BUS_HPP
 
-#include "id_store.hpp"
+#include "types.hpp"
 
 #include <functional>
 #include <memory>
@@ -24,7 +24,7 @@ struct event_signal {
 
 class event_bus {
 private:
-    id_store m_id_store;
+    e_id m_id_counter = 0;
     std::unordered_map<e_id, event_listener*> m_listeners;
 
 public:

@@ -3,7 +3,7 @@
 #include "event_listener.hpp"
 
 std::unique_ptr<cppevent::event_listener> cppevent::event_bus::get_event_listener(create_listener create) {
-    e_id id = m_id_store.get_id();
+    e_id id = ++m_id_counter;
     std::unique_ptr<event_listener> listener = create(id, *this);
     m_listeners[id] = listener.get();
     return listener;
@@ -11,7 +11,6 @@ std::unique_ptr<cppevent::event_listener> cppevent::event_bus::get_event_listene
 
 void cppevent::event_bus::remove_event_listener(e_id id) {
     m_listeners.erase(id);
-    m_id_store.recycle_id(id);
 }
 
 void cppevent::event_bus::transmit_signal(const event_signal& signal) {
