@@ -13,10 +13,16 @@ void cppevent::signal_listener::run_handler(std::optional<std::function<void()>>
 }
 
 void cppevent::signal_listener::set_read_handler(const std::function<void()>& read_handler) {
+    if (m_read_handler_opt) {
+        throw std::runtime_error("Read Handler already set");
+    }
     m_read_handler_opt = read_handler;
 }
 
 void cppevent::signal_listener::set_write_handler(const std::function<void()>& write_handler) {
+    if (m_write_handler_opt) {
+        throw std::runtime_error("Write Handler already set");
+    }
     m_write_handler_opt = write_handler;
 }
 

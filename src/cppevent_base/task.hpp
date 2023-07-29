@@ -86,7 +86,7 @@ public:
         if (promise.m_exception) {
             std::rethrow_exception(promise.m_exception);
         }
-        return std::move(promise.val).value();
+        return std::move(promise.m_val_opt).value();
     }
 };
 
