@@ -4,6 +4,7 @@
 #include "event_loop.hpp"
 #include "event_listener.hpp"
 #include "task.hpp"
+#include "async_signal.hpp"
 
 #include <queue>
 
@@ -12,21 +13,15 @@ namespace cppevent {
 template <typename T>
 class async_queue {
 private:
-    event_loop& m_loop;
-    event_listener* m_listener;
+    async_signal m_signal;
     std::queue<T> m_items;
 public:
-    async_queue(event_loop& loop): m_loop(loop) {
-        m_listener = m_loop.get_signal_listener();
-    }
-
-    ~async_queue() {
-        m_listener->detach();
+    async_queue(event_loop& loop): m_signal(loop) {
     }
 
     awaitable_task<int> await_items() {
-        while (m_items.empty()) {
-            co_await read_awaiter { *m_listener };
+        if (m_items.empty()) {
+            co_await m_signal.await_signal();
         }
         co_return m_items.size();
     }
@@ -41,12 +36,12 @@ public:
 
     void push(const T& item) {
         m_items.push(item);
-        m_loop.send_signal(m_listener->get_id(), true, false);
+        m_signal.get_trigger().activate();
     }
 
     void push(T&& item) {
         m_items.push(std::move(item));
-        m_loop.send_signal(m_listener->get_id(), true, false);
+        m_signal.get_trigger().activate();
     }
 };
 
