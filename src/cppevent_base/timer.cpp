@@ -9,7 +9,7 @@
 
 constexpr std::chrono::seconds ONE_SEC(1);
 
-cppevent::timer::timer(std::chrono::nanoseconds interval, event_loop& loop): m_loop(loop) {
+cppevent::timer::timer(std::chrono::nanoseconds interval, event_loop& loop) {
     m_fd = timerfd_create(CLOCK_REALTIME, TFD_NONBLOCK);
     cppevent::throw_if_error(m_fd, "Failed to create timer fd: ");
     timespec t_spec;
@@ -18,7 +18,7 @@ cppevent::timer::timer(std::chrono::nanoseconds interval, event_loop& loop): m_l
     itimerspec i_spec = { t_spec, t_spec };
     int status = timerfd_settime(m_fd, 0, &i_spec, NULL);
     cppevent::throw_if_error(status, "Failed to set time: ");
-    m_listener = m_loop.get_io_listener(m_fd);
+    m_listener = loop.get_io_listener(m_fd);
 }
 
 cppevent::timer::~timer() {
