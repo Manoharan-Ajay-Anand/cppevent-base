@@ -9,8 +9,8 @@
 namespace cppevent {
 
 struct io_chunk {
-    std::byte* ptr;
-    long size;
+    std::byte* m_ptr;
+    long m_size;
 };
 
 template<long BUFFER_SIZE>
@@ -61,11 +61,11 @@ public:
         long size_read = 0;
         while (size > 0) {
             io_chunk chunk = get_read_chunk();
-            if (chunk.size == 0) {
+            if (chunk.m_size == 0) {
                 break;
             }
-            long size_to_read = std::min(chunk.size, size);
-            std::memcpy(dest, chunk.ptr, size_to_read);
+            long size_to_read = std::min(chunk.m_size, size);
+            std::memcpy(dest, chunk.m_ptr, size_to_read);
             dest += size_to_read;
             size -= size_to_read;
             size_read += size_to_read;
@@ -82,11 +82,11 @@ public:
         long size_written = 0;
         while (size > 0) {
             io_chunk chunk = get_write_chunk();
-            if (chunk.size == 0) {
+            if (chunk.m_size == 0) {
                 break;
             }
-            long size_to_write = std::min(chunk.size, size);
-            std::memcpy(chunk.ptr, src, size_to_write);
+            long size_to_write = std::min(chunk.m_size, size);
+            std::memcpy(chunk.m_ptr, src, size_to_write);
             src += size_to_write;
             size -= size_to_write;
             size_written += size_to_write;
