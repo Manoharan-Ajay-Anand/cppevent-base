@@ -2,13 +2,14 @@
 #define CPPEVENT_BASE_UTIL_HPP
 
 #include <string>
+#include <string_view>
 #include <cstdint>
 
 namespace cppevent {
 
 void throw_errno(std::string prefix);
 
-void throw_if_error(int status, const std::string& prefix);
+void throw_if_error(int status, std::string_view prefix);
 
 uint16_t read_u16_be(const void* src);
 

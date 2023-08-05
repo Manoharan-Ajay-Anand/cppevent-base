@@ -8,9 +8,9 @@ void cppevent::throw_errno(std::string prefix) {
     throw std::runtime_error(prefix.append(strerror(errno)));
 }
 
-void cppevent::throw_if_error(int status, const std::string& prefix) {
+void cppevent::throw_if_error(int status, std::string_view prefix) {
     if (status < 0) {
-        throw_errno(prefix);
+        throw_errno({ prefix.begin(), prefix.end() });
     }
 }
 
