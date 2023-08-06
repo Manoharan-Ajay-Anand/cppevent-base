@@ -7,7 +7,9 @@
 
 namespace cppevent {
 
-void throw_errno(std::string prefix);
+void throw_error(std::string prefix, int errnum);
+
+void throw_error(std::string_view prefix);
 
 void throw_if_error(int status, std::string_view prefix);
 

@@ -77,7 +77,7 @@ cppevent::awaitable_task<void> cppevent::event_loop::run_signal_loop() {
         } else if (errno == EAGAIN || errno == EWOULDBLOCK) {
             co_await read_awaiter {  *listener };
         } else {
-            throw_errno("Failed to read from eventfd: ");
+            throw_error("Failed to read from eventfd: ");
         }
     }
     listener->detach();
@@ -89,7 +89,7 @@ void cppevent::event_loop::run() {
     while (m_running) {
         int count = epoll_wait(m_epoll_fd, events.data(), MAX_EPOLL_ARRAY_SIZE, MAX_EPOLL_TIMEOUT);
         if (count < 0 && errno != EINTR) {
-            throw_errno("EPOLL Wait Failed: ");
+            throw_error("EPOLL Wait Failed: ");
         }
         trigger_io_events(events.data(), count);
     }

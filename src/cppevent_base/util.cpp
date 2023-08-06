@@ -4,13 +4,17 @@
 #include <stdexcept>
 #include <cstring>
 
-void cppevent::throw_errno(std::string prefix) {
-    throw std::runtime_error(prefix.append(strerror(errno)));
+void cppevent::throw_error(std::string prefix, int errnum) {
+    throw std::runtime_error(prefix.append(strerror(errnum)));
+}
+
+void cppevent::throw_error(std::string_view prefix) {
+    return throw_error({ prefix.begin(), prefix.end() }, errno);
 }
 
 void cppevent::throw_if_error(int status, std::string_view prefix) {
     if (status < 0) {
-        throw_errno({ prefix.begin(), prefix.end() });
+        throw_error(prefix);
     }
 }
 
