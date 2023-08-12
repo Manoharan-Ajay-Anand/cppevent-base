@@ -9,7 +9,7 @@ cppevent::async_signal::~async_signal() {
 }
 
 cppevent::signal_trigger cppevent::async_signal::get_trigger() {
-    return { m_listener->get_id(), m_loop };
+    return { m_listener->get_id(), &m_loop };
 }
 
 cppevent::read_awaiter cppevent::async_signal::await_signal() {
