@@ -75,6 +75,12 @@ public:
         m_handle.destroy();
     }
 
+    awaitable_task(const awaitable_task&) = delete;
+    awaitable_task& operator=(const awaitable_task&) = delete;
+
+    awaitable_task(awaitable_task&&) = delete;
+    awaitable_task& operator=(awaitable_task&&) = delete;
+
     bool await_ready() noexcept {
         return m_handle.done();
     }
@@ -121,6 +127,12 @@ public:
     ~awaitable_task() {
         m_handle.destroy();
     }
+
+    awaitable_task(const awaitable_task&) = delete;
+    awaitable_task& operator=(const awaitable_task&) = delete;
+
+    awaitable_task(awaitable_task&&) = delete;
+    awaitable_task& operator=(awaitable_task&&) = delete;
 
     bool await_ready() noexcept {
         return m_handle.done();
