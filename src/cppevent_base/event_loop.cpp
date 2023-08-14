@@ -51,12 +51,25 @@ void cppevent::event_loop::send_signal(e_id id, bool can_read, bool can_write) {
     throw_if_error(status, "Failed to write to eventfd: ");
 }
 
+void cppevent::event_loop::add_op(const std::function<void()>& op) {
+    m_ops.push(op);
+}
+
 void cppevent::event_loop::trigger_io_events(epoll_event* events, int count) {
     for (int i = 0; i < count && m_running; ++i) {
         epoll_event& event = *(events + i);
         bool can_read = (event.events & EPOLLIN) == EPOLLIN;
         bool can_write = (event.events & EPOLLOUT) == EPOLLOUT;
         m_event_bus.transmit_signal({ event.data.u64, can_read, can_write });
+    }
+}
+
+void cppevent::event_loop::run_ops() {
+    std::queue<std::function<void()>> ops = std::move(m_ops);
+    while (!ops.empty() && m_running) {
+        auto op = ops.front();
+        ops.pop();
+        op();
     }
 }
 
@@ -92,6 +105,7 @@ void cppevent::event_loop::run() {
             throw_error("EPOLL Wait Failed: ");
         }
         trigger_io_events(events.data(), count);
+        run_ops();
     }
 }
 

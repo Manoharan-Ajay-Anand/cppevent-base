@@ -6,6 +6,8 @@
 
 #include <memory>
 #include <unordered_map>
+#include <functional>
+#include <queue>
 
 #include <sys/epoll.h>
 
@@ -17,9 +19,11 @@ private:
     int m_epoll_fd;
     int m_event_fd;
     std::unordered_map<e_id, event_signal> m_signals;
+    std::queue<std::function<void()>> m_ops;
     event_bus m_event_bus;
 
     void trigger_io_events(epoll_event* events, int count);
+    void run_ops();
 
     void call_signal_handlers();
     awaitable_task<void> run_signal_loop();
@@ -32,6 +36,7 @@ public:
     event_listener* get_signal_listener();
     
     void send_signal(e_id id, bool can_read, bool can_write);
+    void add_op(const std::function<void()>& op);
     
     void run();
     void stop();
