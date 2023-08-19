@@ -15,6 +15,7 @@ namespace cppevent {
 
 class event_loop {
 private:
+    bool m_event_fd_triggered;
     bool m_running;
     int m_epoll_fd;
     int m_event_fd;
@@ -23,10 +24,11 @@ private:
     event_bus m_event_bus;
 
     void trigger_io_events(epoll_event* events, int count);
-    void run_ops();
 
+    void trigger_event_fd();
+    void run_ops();
     void call_signal_handlers();
-    awaitable_task<void> run_signal_loop();
+    awaitable_task<void> run_internal_loop();
 
 public:
     event_loop();
