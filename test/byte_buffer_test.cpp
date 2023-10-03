@@ -70,7 +70,7 @@ TEST_CASE("byte_buffer read test") {
         CHECK(buffer.capacity() == BUFFER_SIZE);
     }
 
-    SUBCASE("multiple writes with start offset") {
+    SUBCASE("multiple reads with start offset") {
         buffer.increment_read_p(3);
         buffer.increment_write_p(BUFFER_SIZE + 3);
         std::array<std::byte, STR_SIZE> dest_arr;
