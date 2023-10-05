@@ -2,7 +2,7 @@
 #define CPPEVENT_BASE_ASYNC_QUEUE_HPP
 
 #include "event_loop.hpp"
-#include "event_listener.hpp"
+#include "event_callback.hpp"
 #include "task.hpp"
 
 #include <queue>
@@ -13,16 +13,16 @@ template <typename T>
 struct async_queue_awaiter {
 private:
     std::queue<T>& m_items;
-    event_listener& m_listener;
+    event_callback& m_callback;
 public:
-    async_queue_awaiter(std::queue<T>& items, event_listener& listener): m_items(items),
-                                                                         m_listener(listener) {
+    async_queue_awaiter(std::queue<T>& items, event_callback& callback): m_items(items),
+                                                                         m_callback(callback) {
     }
 
     bool await_ready() { return !m_items.empty(); }
     
     void await_suspend(std::coroutine_handle<> handle) {
-        m_listener.set_read_handler([handle]() {
+        m_callback.set_handler([handle](e_status status) {
             handle.resume();
         });
     }
@@ -35,18 +35,18 @@ class async_queue {
 private:
     std::queue<T> m_items;
     event_loop& m_loop;
-    event_listener* m_listener;
+    event_callback* m_callback;
 public:
     async_queue(event_loop& loop): m_loop(loop) {
-        m_listener = loop.get_signal_listener();
+        m_callback = m_loop.get_event_callback();
     }
 
     ~async_queue() {
-        m_listener->detach();
+        m_callback->detach();
     }
 
     async_queue_awaiter<T> await_items() {
-        return { m_items, *m_listener };
+        return { m_items, *m_callback };
     }
 
     T& front() {
@@ -58,13 +58,17 @@ public:
     }
 
     void push(const T& item) {
+        if (m_items.empty()) {
+            m_loop.add_event({ m_callback->get_id(), 0 });
+        }
         m_items.push(item);
-        m_loop.send_signal(m_listener->get_id(), true, false);
     }
 
     void push(T&& item) {
+        if (m_items.empty()) {
+            m_loop.add_event({ m_callback->get_id(), 0 });
+        }
         m_items.push(std::move(item));
-        m_loop.send_signal(m_listener->get_id(), true, false);
     }
 };
 

@@ -8,13 +8,13 @@
 
 namespace cppevent {
 
-class event_loop;
+class io_listener;
 
-class event_listener;
+class event_loop;
 
 class timer {
 private:
-    event_listener* m_listener;
+    std::unique_ptr<io_listener> m_listener;
     int m_fd;
 public:
     timer(std::chrono::nanoseconds interval, event_loop& loop);

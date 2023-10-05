@@ -2,18 +2,17 @@
 #define CPPEVENT_BASE_ASYNC_SIGNAL_HPP
 
 #include "event_loop.hpp"
-#include "event_listener.hpp"
 
 #include <coroutine>
 
 namespace cppevent {
 
 struct signal_trigger {
-    const e_id m_id;
+    const e_event m_ev;
     event_loop* const m_loop;
 
     void activate() {
-        m_loop->send_signal(m_id, true, false);
+        m_loop->add_event(m_ev);
     }
 };
 
@@ -33,7 +32,7 @@ public:
 
 class async_signal {
 private:
-    event_listener* m_listener;
+    event_callback* m_callback;
     event_loop& m_loop;
     bool m_triggered;
     std::coroutine_handle<> m_handle;

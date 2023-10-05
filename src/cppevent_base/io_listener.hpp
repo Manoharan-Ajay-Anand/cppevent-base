@@ -1,37 +1,31 @@
 #ifndef CPPEVENT_BASE_IO_LISTENER_HPP
 #define CPPEVENT_BASE_IO_LISTENER_HPP
 
-#include "event_listener.hpp"
+#include "types.hpp"
+#include "event_callback.hpp"
 
-#include <optional>
+struct io_uring;
 
-#include <sys/epoll.h>
+struct iovec;
 
 namespace cppevent {
 
-class io_listener : public event_listener {
+class io_listener {
 private:
-    uint32_t m_polling_events;
-    epoll_event m_event;
-    int m_epoll_op;
-    const int m_epoll_fd;
+    event_callback* const m_callback;
+    io_uring* const m_ring;
     const int m_fd;
-    std::optional<std::function<void()>> m_read_handler_opt;
-    std::optional<std::function<void()>> m_write_handler_opt;
 
-    void mod_epoll();
-
-    void run_handler(bool can_op, uint32_t op, std::optional<std::function<void()>>& handler_opt);
- 
 public:
-    io_listener(e_id id, event_bus& e_bus, int epoll_fd, int fd);
+    io_listener(event_callback* callback, io_uring* ring, int fd);
+    ~io_listener();
 
-    int get_fd() const { return m_fd; }
+    status_awaiter on_read(void* dest, long size);
+    status_awaiter on_write(const void* src, long size);
 
-    void set_read_handler(const std::function<void()>& read_handler) override;
-    void set_write_handler(const std::function<void()>& write_handler) override;
+    status_awaiter on_readv(const iovec *iov, int iovcnt);
+    status_awaiter on_writev(const iovec *iov, int iovcnt);
 
-    void on_event(bool can_read, bool can_write) override;
 };
 
 }

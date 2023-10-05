@@ -3,13 +3,10 @@
 
 #include "task.hpp"
 #include "event_bus.hpp"
+#include "io_listener.hpp"
+#include "io_service.hpp"
 
-#include <memory>
-#include <unordered_map>
-#include <functional>
 #include <queue>
-
-#include <sys/epoll.h>
 
 namespace cppevent {
 
@@ -17,27 +14,29 @@ class event_loop {
 private:
     bool m_event_fd_triggered;
     bool m_running;
-    int m_epoll_fd;
     int m_event_fd;
-    std::unordered_map<e_id, event_signal> m_signals;
-    std::queue<std::function<void()>> m_ops;
-    event_bus m_event_bus;
 
-    void trigger_io_events(epoll_event* events, int count);
+    std::queue<e_event> m_events;
+    std::queue<std::function<void()>> m_ops;
+    
+    event_bus m_event_bus;
+    io_service m_io_service;
 
     void trigger_event_fd();
+
     void run_ops();
-    void call_signal_handlers();
+    void notify_events();
+    
     awaitable_task<void> run_internal_loop();
 
 public:
     event_loop();
     ~event_loop();
 
-    event_listener* get_io_listener(int fd);
-    event_listener* get_signal_listener();
+    std::unique_ptr<io_listener> get_io_listener(int fd);
+    event_callback* get_event_callback();
     
-    void send_signal(e_id id, bool can_read, bool can_write);
+    void add_event(e_event ev);
     void add_op(const std::function<void()>& op);
     
     void run();
