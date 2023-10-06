@@ -8,11 +8,11 @@
 namespace cppevent {
 
 struct signal_trigger {
-    const e_event m_ev;
+    const e_id m_id;
     event_loop* const m_loop;
 
     void activate() {
-        m_loop->add_event(m_ev);
+        m_loop->add_event({ m_id, 0 });
     }
 };
 

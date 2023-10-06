@@ -29,7 +29,7 @@ cppevent::async_signal::~async_signal() {
 }
 
 cppevent::signal_trigger cppevent::async_signal::get_trigger() {
-    return { { m_callback->get_id(), 0 }, &m_loop };
+    return { m_callback->get_id(), &m_loop };
 }
 
 cppevent::signal_awaiter cppevent::async_signal::await_signal() {
