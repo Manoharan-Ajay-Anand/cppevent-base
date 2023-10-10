@@ -1,66 +1,26 @@
 #include <doctest/doctest.h>
 
-#include <cppevent_base/event_listener.hpp>
+#include <cppevent_base/event_bus.hpp>
+#include <cppevent_base/event_callback.hpp>
 #include <cppevent_base/task.hpp>
 
 #define SAMPLE_NUM 100
+#define MULTIPLIER 2
 
-enum class Event {
-    READ,
-    WRITE
-};
-
-class test_event_listener : public cppevent::event_listener {
-private:
-    std::optional<std::function<void()>> m_read_handler_opt;
-    std::optional<std::function<void()>> m_write_handler_opt;
-public:
-    test_event_listener(cppevent::e_id id, cppevent::event_bus& bus): cppevent::event_listener(id, bus) {}
-
-    void set_read_handler(const std::function<void()>& read_handler) {
-        m_read_handler_opt = read_handler;
-    }
-
-    void set_write_handler(const std::function<void()>& write_handler) {
-        m_write_handler_opt = write_handler;
-    }
-
-    void on_event(bool can_read, bool can_write) {
-        if (can_read && m_read_handler_opt.has_value()) {
-            m_read_handler_opt.value()();
-        }
-        if (can_write && m_write_handler_opt.has_value()) {
-            m_write_handler_opt.value()();
-        }
-    }
-};
-
-cppevent::task double_num(int& num, cppevent::event_listener& listener, Event event) {
-    if (event == Event::READ) {
-        co_await cppevent::read_awaiter { listener };
-    } else {
-        co_await cppevent::write_awaiter { listener };
-    }
-    num *= 2;
+cppevent::task multiply_num(int& num, cppevent::event_callback& cb) {
+    num *= co_await cppevent::status_awaiter { cb };
 }
 
 TEST_CASE("awaiters test") {
     cppevent::event_bus bus;
-    test_event_listener listener(1, bus);
+    cppevent::event_callback* cb = bus.get_event_callback();
 
-    SUBCASE("read event") {
+    SUBCASE("trigger event") {
         int num = SAMPLE_NUM;
-        double_num(num, listener, Event::READ);
+        multiply_num(num, *cb);
         CHECK(num == SAMPLE_NUM);
-        listener.on_event(true, false);
-        CHECK(num == SAMPLE_NUM * 2);
+        bus.notify(cb->get_id(), MULTIPLIER);
+        CHECK(num == SAMPLE_NUM * MULTIPLIER);
     }
 
-    SUBCASE("write event") {
-        int num = SAMPLE_NUM;
-        double_num(num, listener, Event::WRITE);
-        CHECK(num == SAMPLE_NUM);
-        listener.on_event(false, true);
-        CHECK(num == SAMPLE_NUM * 2);
-    }
 }
