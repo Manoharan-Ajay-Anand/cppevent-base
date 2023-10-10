@@ -24,6 +24,12 @@ public:
     io_listener(event_callback* callback, io_uring* ring, int fd);
     ~io_listener();
 
+    io_listener(const io_listener&) = delete;
+    io_listener& operator=(const io_listener&) = delete;
+
+    io_listener(io_listener&&) = delete;
+    io_listener& operator=(io_listener&&) = delete;
+
     status_awaiter on_accept(sockaddr* addr, socklen_t* len);
     status_awaiter on_connect(const sockaddr* addr, socklen_t len);
 
