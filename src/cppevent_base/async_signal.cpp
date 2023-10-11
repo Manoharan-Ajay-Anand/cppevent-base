@@ -22,10 +22,21 @@ cppevent::async_signal::async_signal(event_loop& loop): m_loop(loop) {
     m_callback = loop.get_event_callback();
     m_triggered = false;
     m_handle = std::noop_coroutine();
+    set_callback();
 }
 
 cppevent::async_signal::~async_signal() {
     m_callback->detach();
+}
+
+void cppevent::async_signal::set_callback() {
+    m_callback->set_handler([this](e_status stat) {
+        set_callback();
+        if (!m_triggered) {
+            m_triggered = true;
+            m_handle.resume();
+        }
+    });
 }
 
 cppevent::signal_trigger cppevent::async_signal::get_trigger() {
@@ -33,9 +44,5 @@ cppevent::signal_trigger cppevent::async_signal::get_trigger() {
 }
 
 cppevent::signal_awaiter cppevent::async_signal::await_signal() {
-    m_callback->set_handler([this](e_status status) {
-        m_triggered = true;
-        m_handle.resume();
-    });
-    return signal_awaiter { m_triggered, m_handle };
+    return { m_triggered, m_handle };
 }

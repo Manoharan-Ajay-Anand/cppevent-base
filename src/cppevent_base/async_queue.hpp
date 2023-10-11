@@ -13,21 +13,22 @@ template <typename T>
 struct async_queue_awaiter {
 private:
     std::queue<T>& m_items;
-    event_callback& m_callback;
+    std::coroutine_handle<>& m_handle;
 public:
-    async_queue_awaiter(std::queue<T>& items, event_callback& callback): m_items(items),
-                                                                         m_callback(callback) {
+    async_queue_awaiter(std::queue<T>& items, std::coroutine_handle<>& handle): m_items(items),
+                                                                                m_handle(handle) {
     }
 
     bool await_ready() { return !m_items.empty(); }
     
     void await_suspend(std::coroutine_handle<> handle) {
-        m_callback.set_handler([handle](e_status status) {
-            handle.resume();
-        });
+        m_handle = handle;
     }
     
-    long await_resume() { return m_items.size(); }
+    long await_resume() {
+        m_handle = std::noop_coroutine(); 
+        return m_items.size();
+    }
 };
 
 template <typename T>
@@ -35,18 +36,13 @@ class async_queue {
 private:
     std::queue<T> m_items;
     event_loop& m_loop;
-    event_callback* m_callback;
+    std::coroutine_handle<> m_handle;
 public:
     async_queue(event_loop& loop): m_loop(loop) {
-        m_callback = m_loop.get_event_callback();
-    }
-
-    ~async_queue() {
-        m_callback->detach();
     }
 
     async_queue_awaiter<T> await_items() {
-        return { m_items, *m_callback };
+        return { m_items, m_handle };
     }
 
     T& front() {
@@ -59,14 +55,14 @@ public:
 
     void push(const T& item) {
         if (m_items.empty()) {
-            m_loop.add_event({ m_callback->get_id(), 0 });
+            m_loop.add_op([handle = m_handle]() { handle.resume(); });
         }
         m_items.push(item);
     }
 
     void push(T&& item) {
         if (m_items.empty()) {
-            m_loop.add_event({ m_callback->get_id(), 0 });
+            m_loop.add_op([handle = m_handle]() { handle.resume(); });
         }
         m_items.push(std::move(item));
     }

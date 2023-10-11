@@ -36,9 +36,18 @@ private:
     event_loop& m_loop;
     bool m_triggered;
     std::coroutine_handle<> m_handle;
+
+    void set_callback();
+
 public:
     async_signal(event_loop& loop);
     ~async_signal();
+
+    async_signal(const async_signal&) = delete;
+    async_signal& operator=(const async_signal&) = delete;
+
+    async_signal(async_signal&&) = delete;
+    async_signal& operator=(async_signal&&) = delete;
 
     signal_trigger get_trigger();
     signal_awaiter await_signal();
